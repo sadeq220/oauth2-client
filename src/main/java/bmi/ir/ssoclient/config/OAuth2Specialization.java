@@ -71,7 +71,7 @@ public class OAuth2Specialization {
                 .scope("openid", "profile", "email", "address", "phone")
                 .authorizationUri("https://accounts.google.com/o/oauth2/auth")
                 .redirectUri("http://localhost:8080/login/oauth2/code/")
-                .tokenUri("https://oauth2.googleapis.com/token")
+                .tokenUri("https://oauth2.googleapis.com/token") // to acquire an access-token by authorization grant request
                 .jwkSetUri("https://www.googleapis.com/oauth2/v3/certs") // id-token Signature Verifier
                 .userInfoUri("https://www.googleapis.com/oauth2/v3/userinfo")
                 .clientName("Google")
@@ -93,8 +93,5 @@ public class OAuth2Specialization {
         HashMap<String, Object> additionalParams = new HashMap<>();
         additionalParams.put("sso",1);
         return additionalParams;
-    }
-    private URI applicationAuthorizationGrantEndpoint(){
-        return URI.create("http://localhost:8080");
     }
 }
