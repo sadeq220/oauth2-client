@@ -73,6 +73,7 @@ public class OAuth2Specialization {
                 .redirectUri("http://localhost:8080/login/oauth2/code/")
                 .tokenUri("https://oauth2.googleapis.com/token") // to acquire an access-token by authorization grant request
                 .jwkSetUri("https://www.googleapis.com/oauth2/v3/certs") // id-token Signature Verifier
+                .jwkSetUri("http://localhost/google/jwkset") //mocked jwk set
                 .userInfoUri("https://www.googleapis.com/oauth2/v3/userinfo")
                 .clientName("Google")
                 .build();
