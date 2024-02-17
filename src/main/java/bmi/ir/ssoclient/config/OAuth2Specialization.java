@@ -6,6 +6,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2ClientConfigurer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
@@ -26,6 +27,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Configuration
@@ -59,7 +61,8 @@ public class OAuth2Specialization {
 
     @Bean
     public ClientRegistrationRepository oauthRegistrationRepository(){
-        return new InMemoryClientRegistrationRepository(this.googleClientRegistration());
+        List<ClientRegistration> clientRegistrations = List.of(this.googleClientRegistration(),this.bamClientRegistration());
+        return new InMemoryClientRegistrationRepository(clientRegistrations);
     }
     private ClientRegistration googleClientRegistration(){
         return ClientRegistration
@@ -78,6 +81,19 @@ public class OAuth2Specialization {
                 .clientName("Google")
                 .build();
     }
+    private ClientRegistration bamClientRegistration(){
+        return ClientRegistration
+                .withRegistrationId("bam")
+                .clientId("mika-local-client")
+                .clientSecret("nG6mR3sB6kR7eG2bO6hF4yS3dB3cG2bB1jC5pC1qC1")
+                .authorizationUri("http://185.135.30.10:9443/identity/oauth2/auth/authorize")
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .scope("batch-user-info")
+                .redirectUri("http://localhost:8080/login/oauth2/code/")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .tokenUri("http://185.135.30.10:9443/identity/oauth2/auth/token")
+                .build();
+    }
     private DelegatingAuthenticationEntryPoint authenticationEntryPoint()  {
         LinkedHashMap<RequestMatcher, AuthenticationEntryPoint> matcherToEntryPoint = new LinkedHashMap<>();
         AntPathRequestMatcher antPathRequestMatcher = new AntPathRequestMatcher("/**");
@@ -87,7 +103,10 @@ public class OAuth2Specialization {
     }
     private OAuth2AuthorizationRequestResolver authorizationRequestResolver(){
         DefaultOAuth2AuthorizationRequestResolver defaultOAuth2AuthorizationRequestResolver = new DefaultOAuth2AuthorizationRequestResolver(this.oauthRegistrationRepository(), "/oauth2/authorization");
-        defaultOAuth2AuthorizationRequestResolver.setAuthorizationRequestCustomizer(builder -> {builder.additionalParameters(this.authorizationUriAdditionalParams());});
+        defaultOAuth2AuthorizationRequestResolver.setAuthorizationRequestCustomizer(builder -> {
+            builder.additionalParameters(this.authorizationUriAdditionalParams());
+            builder.state(KeyGenerators.string().generateKey()); // use HexEncodingStringKeyGenerator because bam does not accept base64 encoding
+        });
         return defaultOAuth2AuthorizationRequestResolver;
     }
     private Map<String,Object> authorizationUriAdditionalParams(){
