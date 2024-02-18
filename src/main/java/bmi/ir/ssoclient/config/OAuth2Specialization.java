@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2ClientConfigurer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.crypto.keygen.KeyGenerators;
+import org.springframework.security.crypto.keygen.StringKeyGenerator;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
@@ -83,7 +84,7 @@ public class OAuth2Specialization {
     }
     private ClientRegistration bamClientRegistration(){
         return ClientRegistration
-                .withRegistrationId("bam")
+                .withRegistrationId("baam")
                 .clientId("mika-local-client")
                 .clientSecret("nG6mR3sB6kR7eG2bO6hF4yS3dB3cG2bB1jC5pC1qC1")
                 .authorizationUri("http://185.135.30.10:9443/identity/oauth2/auth/authorize")
@@ -103,9 +104,10 @@ public class OAuth2Specialization {
     }
     private OAuth2AuthorizationRequestResolver authorizationRequestResolver(){
         DefaultOAuth2AuthorizationRequestResolver defaultOAuth2AuthorizationRequestResolver = new DefaultOAuth2AuthorizationRequestResolver(this.oauthRegistrationRepository(), "/oauth2/authorization");
+        StringKeyGenerator keyGenerator = KeyGenerators.string();
         defaultOAuth2AuthorizationRequestResolver.setAuthorizationRequestCustomizer(builder -> {
             builder.additionalParameters(this.authorizationUriAdditionalParams());
-            builder.state(KeyGenerators.string().generateKey()); // use HexEncodingStringKeyGenerator because bam does not accept base64 encoding
+            builder.state(keyGenerator.generateKey()); // use HexEncodingStringKeyGenerator because baam does not accept base64 encoding
         });
         return defaultOAuth2AuthorizationRequestResolver;
     }
