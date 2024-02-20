@@ -41,7 +41,7 @@ public class APIGatewayRouterConfig {
             ServerRequest.Builder builder = ServerRequest.from(serverRequest);
             byte[] randomBytes=new byte[8];
             nonBlockingPRNG.nextBytes(randomBytes);
-            builder.header("CorrelationId", new String(Hex.encode(randomBytes)));
+            builder.header("Correlation-Id", new String(Hex.encode(randomBytes)));
             return builder.build();
         };
     }
