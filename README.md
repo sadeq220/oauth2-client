@@ -10,11 +10,11 @@ either on behalf of a resource owner,
 or by allowing the third-party application to obtain access on its own behalf.
 
 OAuth Roles:
-- resource owner
+- **resource owner**
     - An entity capable of granting access to a protected resource.
        When the resource owner is a person, it is referred to as an `end-user`.    
     - For example: any person with Google account.
-- client
+- **client**
     - An application that requests access to resources controlled by the resource owner.    
     - For example: any app with Google sign-in.    
 - authorization server
@@ -22,7 +22,15 @@ OAuth Roles:
     - For example: Google oauth service
 - resource server
     - The server hosting the protected resources, capable of accepting and responding to protected resource requests using access tokens.    
-    - For example: Google Drive service
+    - For example: Google Drive service   
+
+### OAuth 2.0 protocol flow
+Client must register itself with authorization server first, and in return obtains `client id` and `client secret`.    
+
+- **authorization request**:client redirects end-user to authorization server
+- **authorization response**: after end-user successfully authenticates and authorize the client, authorization server redirects end-user to client with **authorization grant**.     
+- **access token request**: The client requests an access token by authenticating with the authorization server and presenting the authorization grant.    
+- **access token response**: The authorization server authenticates the client and validates the authorization grant, and if valid, issues an access token.     
 
 ### References
 - [OAuth 2.0 RFC](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1)
