@@ -5,6 +5,19 @@ Today, two protocols are the main competitors when it comes to setting up SSO:
 - `Security Assertion Markup Language 2.0 (SAML)`(legacy protocol)—A protocol using the Extensible Markup Language (XML) encoding.     
 - `OpenID Connect (OIDC)`—An extension to the OAuth 2.0 (RFC 6749) authorization protocol using the JavaScript Object Notation (JSON) encoding.    
 
+**Identity and Access Management(IAM)**
+Identity and access management provides control over user validation and resource access.    
+IAM is a discipline and a type of framework and a solution to `secure access to resources`.    
+IAM systems require one or many authentication factors to verify identity.
+IAM industry standards:    
+- OAuth 2.0
+- Open ID Connect
+- JSON web tokens
+- SAML
+
+In the past, the standard for IAM was for a system to create and manage its own identity information for its users.    
+Auth0 is an Identity platform.    
+
 The OAuth 2.0 enables a third-party application to obtain limited access to an HTTP service(**OAuth 2.0 is designed for use with HTTP**, and heavily uses HTTP redirects),     
 either on behalf of a resource owner,     
 or by allowing the third-party application to obtain access on its own behalf.
@@ -34,3 +47,4 @@ Client must register itself with authorization server first, and in return obtai
 
 ### References
 - [OAuth 2.0 RFC](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1)
+- [Auth0 IAM](https://auth0.com/docs/get-started/identity-fundamentals/identity-and-access-management) 
