@@ -29,9 +29,11 @@ public class KeyStoreSecretKeyReader implements SecretKeyReader{
         try {
             KeyStore pkcs12Keystore = KeyStore.getInstance("PKCS12");
             pkcs12Keystore.load(keyStore.getInputStream(),keyStorePassword.toCharArray());
-            Key baam_secret_key = pkcs12Keystore.getKey("baam_jwt_secretkey", keyStorePassword.toCharArray());
+            Key baam_jwt_secretKey = pkcs12Keystore.getKey("baam_jwt_secretkey", keyStorePassword.toCharArray());
+            Key baam_client_secretKey = pkcs12Keystore.getKey("baam_client_secretkey",keyStorePassword.toCharArray());
             return Map.ofEntries( // unmodifiable map
-                    Map.entry("baam_jwt_secretkey",baam_secret_key.getEncoded()));
+                    Map.entry("baam_jwt_secretkey",baam_jwt_secretKey.getEncoded()),
+                    Map.entry("baam_client_secretkey", baam_client_secretKey.getEncoded()));
         } catch (KeyStoreException | CertificateException | NoSuchAlgorithmException e) {
             logger.error("keystore reading exception!",e);
             throw e;
@@ -50,6 +52,6 @@ public class KeyStoreSecretKeyReader implements SecretKeyReader{
 
     @Override
     public byte[] getOAuth2ClientSecretKey() {
-        return new byte[0];
+        return secretKeyCache.get("baam_client_secretkey");
     }
 }
