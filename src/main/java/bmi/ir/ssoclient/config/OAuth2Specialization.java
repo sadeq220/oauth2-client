@@ -1,5 +1,6 @@
 package bmi.ir.ssoclient.config;
 
+import bmi.ir.ssoclient.cryptography.SecretKeyReader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -52,14 +53,14 @@ public class OAuth2Specialization {
     /**
      * oauth2 filter chain
      */
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, OAuth2AuthorizationRequestResolver oAuth2AuthorizationRequestResolver) throws Exception {
         http
                 .csrf(httpSecurityCsrfConfigurer -> {httpSecurityCsrfConfigurer.disable();})
                 .authorizeHttpRequests((authorizeRequests)->authorizeRequests.requestMatchers("/air/**").permitAll().requestMatchers("/oauth2/**").permitAll().anyRequest().authenticated())
                // .authorizeHttpRequests((authorizeRequests)->authorizeRequests.requestMatchers("/air/**").permitAll().anyRequest().authenticated()) // request matcher part of SecurityFilterChain
                 //.oauth2Client((oauth2client)->{})
                 //.exceptionHandling(exceptionHandlingConfigurer -> {exceptionHandlingConfigurer.authenticationEntryPoint(this.authenticationEntryPoint());});
-                .oauth2Login((oauth2login)->{oauth2login.authorizationEndpoint(authorizationEndpointConfig -> authorizationEndpointConfig.authorizationRequestResolver(this.authorizationRequestResolver()));
+                .oauth2Login((oauth2login)->{oauth2login.authorizationEndpoint(authorizationEndpointConfig -> authorizationEndpointConfig.authorizationRequestResolver(oAuth2AuthorizationRequestResolver));
                 oauth2login.tokenEndpoint(tokenEndpointConfig -> tokenEndpointConfig.accessTokenResponseClient(this.tokenEndpointCustomizer()));});
         return http.build();
     }
@@ -68,8 +69,8 @@ public class OAuth2Specialization {
      */
 
     @Bean
-    public ClientRegistrationRepository oauthRegistrationRepository(){
-        List<ClientRegistration> clientRegistrations = List.of(this.googleClientRegistration(),this.bamClientRegistration());
+    public ClientRegistrationRepository oauthRegistrationRepository(SecretKeyReader secretKeyReader){
+        List<ClientRegistration> clientRegistrations = List.of(this.googleClientRegistration(),this.bamClientRegistration(secretKeyReader.getOAuth2ClientSecretKey()));
         return new InMemoryClientRegistrationRepository(clientRegistrations);
     }
     private ClientRegistration googleClientRegistration(){
@@ -89,11 +90,11 @@ public class OAuth2Specialization {
                 .clientName("Google")
                 .build();
     }
-    private ClientRegistration bamClientRegistration(){
+    private ClientRegistration bamClientRegistration(byte[] clientSecretKey){
         return ClientRegistration
                 .withRegistrationId("baam")
                 .clientId("mika-local-client")
-                .clientSecret("nG6mR3sB6kR7eG2bO6hF4yS3dB3cG2bB1jC5pC1qC1")
+                .clientSecret(new String(clientSecretKey))
                 .authorizationUri("http://185.135.30.10:9443/identity/oauth2/auth/authorize")
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .scope("batch-user-info")
@@ -109,8 +110,9 @@ public class OAuth2Specialization {
         matcherToEntryPoint.put(antPathRequestMatcher,loginUrlAuthenticationEntryPoint);
         return new DelegatingAuthenticationEntryPoint(matcherToEntryPoint);
     }
-    private OAuth2AuthorizationRequestResolver authorizationRequestResolver(){
-        DefaultOAuth2AuthorizationRequestResolver defaultOAuth2AuthorizationRequestResolver = new DefaultOAuth2AuthorizationRequestResolver(this.oauthRegistrationRepository(), "/oauth2/authorization");
+    @Bean
+    public OAuth2AuthorizationRequestResolver authorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository){
+        DefaultOAuth2AuthorizationRequestResolver defaultOAuth2AuthorizationRequestResolver = new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository, "/oauth2/authorization");
         StringKeyGenerator keyGenerator = KeyGenerators.string();
         defaultOAuth2AuthorizationRequestResolver.setAuthorizationRequestCustomizer(builder -> {
             builder.additionalParameters(this.authorizationUriAdditionalParams());
