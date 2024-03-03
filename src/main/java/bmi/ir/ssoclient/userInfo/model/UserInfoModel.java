@@ -41,6 +41,9 @@ public class UserInfoModel implements OAuth2User {
                 .map(authority-> (GrantedAuthority) () -> authority)
                 .collect(Collectors.toList());
     }
+    public List<String> getAuthoritiesAsString(){
+        return authorities;
+    }
 
     public Content getContent() {
         return content;
