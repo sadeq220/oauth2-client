@@ -1,6 +1,7 @@
 package bmi.ir.ssoclient.config;
 
 import bmi.ir.ssoclient.cryptography.SecretKeyReader;
+import bmi.ir.ssoclient.userInfo.UserInfoAccessor;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
@@ -17,13 +18,16 @@ import java.util.Base64;
 /**
  * automatically registered with OAuth2LoginAuthenticationProvider
  * the input is result of tokenUri endpoint
- * the result will be set in SecurityContextHolder
+ * the result will be set in SecurityContextHolder as a principal object
  */
 public class UserDetailsService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     private final SecretKeyReader secretKeyReader;
+    private final UserInfoAccessor userInfoAccessor;
 
-    public UserDetailsService(SecretKeyReader secretKeyReader) {
+    public UserDetailsService(SecretKeyReader secretKeyReader,
+                              UserInfoAccessor userInfoAccessor) {
         this.secretKeyReader = secretKeyReader;
+        this.userInfoAccessor = userInfoAccessor;
     }
 
     @Override
@@ -33,7 +37,6 @@ public class UserDetailsService implements OAuth2UserService<OAuth2UserRequest, 
         DecodedJWT decodedJWT = JWT.decode(accessToken.getTokenValue());// auth0 SDK
         algorithm.verify(decodedJWT);// only verify signature and ignore "exp" and "nbf" claims
         String nationalId = decodedJWT.getClaims().get("ssn").asString();
-
-        return null;
+        return userInfoAccessor.getIdentity(nationalId);
     }
 }
