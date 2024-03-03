@@ -1,6 +1,7 @@
-package bmi.ir.ssoclient.testfilterchain;
+package bmi.ir.ssoclient.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import bmi.ir.ssoclient.controller.model.UserInfoDto;
+import bmi.ir.ssoclient.userInfo.model.UserInfoModel;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,10 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/protected")
 public class ProtectedController {
 
-    @GetMapping("/user/info")
+    @GetMapping("/user-info")
     public Object userInfo(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();
-        return principal;
+        return UserInfoDto.create((UserInfoModel) principal);
     }
 }
