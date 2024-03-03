@@ -1,6 +1,7 @@
 package bmi.ir.ssoclient.controller.model;
 
 import bmi.ir.ssoclient.userInfo.model.UserInfoModel;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
@@ -8,6 +9,7 @@ public class UserInfoDto {
     private String nationalId;
     private String role;
     private List<String> authorities;
+    @JsonProperty("content")
     private ContentDto contentDto;
 
     public String getNationalId() {
