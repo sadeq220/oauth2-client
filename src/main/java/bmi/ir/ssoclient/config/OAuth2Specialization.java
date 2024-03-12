@@ -60,7 +60,7 @@ public class OAuth2Specialization {
                 .authorizeHttpRequests((authorizeRequests)->authorizeRequests.requestMatchers("/air/**").permitAll().requestMatchers("/oauth2/**").permitAll().anyRequest().authenticated())
                // .authorizeHttpRequests((authorizeRequests)->authorizeRequests.requestMatchers("/air/**").permitAll().anyRequest().authenticated()) // request matcher part of SecurityFilterChain
                 //.oauth2Client((oauth2client)->{})
-                //.exceptionHandling(exceptionHandlingConfigurer -> {exceptionHandlingConfigurer.authenticationEntryPoint(this.authenticationEntryPoint());});
+                .exceptionHandling(exceptionHandlingConfigurer -> {exceptionHandlingConfigurer.authenticationEntryPoint(this.authenticationEntryPoint());})
                 .oauth2Login((oauth2login)->{oauth2login.authorizationEndpoint(authorizationEndpointConfig -> authorizationEndpointConfig.authorizationRequestResolver(oAuth2AuthorizationRequestResolver));
                                              oauth2login.tokenEndpoint(tokenEndpointConfig -> tokenEndpointConfig.accessTokenResponseClient(this.tokenEndpointCustomizer()));
                                              oauth2login.successHandler(authenticationSuccessHandler);
@@ -109,7 +109,7 @@ public class OAuth2Specialization {
     private DelegatingAuthenticationEntryPoint authenticationEntryPoint()  {
         LinkedHashMap<RequestMatcher, AuthenticationEntryPoint> matcherToEntryPoint = new LinkedHashMap<>();
         AntPathRequestMatcher antPathRequestMatcher = new AntPathRequestMatcher("/**");
-        LoginUrlAuthenticationEntryPoint loginUrlAuthenticationEntryPoint = new LoginUrlAuthenticationEntryPoint("/oauth2/authorization/google");
+        LoginUrlAuthenticationEntryPoint loginUrlAuthenticationEntryPoint = new LoginUrlAuthenticationEntryPoint("/oauth2/authorization/baam");
         matcherToEntryPoint.put(antPathRequestMatcher,loginUrlAuthenticationEntryPoint);
         return new DelegatingAuthenticationEntryPoint(matcherToEntryPoint);
     }
