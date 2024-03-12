@@ -1,6 +1,7 @@
 package bmi.ir.ssoclient.config;
 
 import bmi.ir.ssoclient.cryptography.SecretKeyReader;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -23,9 +24,7 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.DelegatingAuthenticationEntryPoint;
-import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.*;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.MultiValueMap;
@@ -53,7 +52,9 @@ public class OAuth2Specialization {
     /**
      * oauth2 filter chain
      */
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, OAuth2AuthorizationRequestResolver oAuth2AuthorizationRequestResolver) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   OAuth2AuthorizationRequestResolver oAuth2AuthorizationRequestResolver,
+                                                   AuthenticationSuccessHandler authenticationSuccessHandler) throws Exception {
         http
                 .csrf(httpSecurityCsrfConfigurer -> {httpSecurityCsrfConfigurer.disable();})
                 .authorizeHttpRequests((authorizeRequests)->authorizeRequests.requestMatchers("/air/**").permitAll().requestMatchers("/oauth2/**").permitAll().anyRequest().authenticated())
@@ -61,7 +62,9 @@ public class OAuth2Specialization {
                 //.oauth2Client((oauth2client)->{})
                 //.exceptionHandling(exceptionHandlingConfigurer -> {exceptionHandlingConfigurer.authenticationEntryPoint(this.authenticationEntryPoint());});
                 .oauth2Login((oauth2login)->{oauth2login.authorizationEndpoint(authorizationEndpointConfig -> authorizationEndpointConfig.authorizationRequestResolver(oAuth2AuthorizationRequestResolver));
-                oauth2login.tokenEndpoint(tokenEndpointConfig -> tokenEndpointConfig.accessTokenResponseClient(this.tokenEndpointCustomizer()));});
+                                             oauth2login.tokenEndpoint(tokenEndpointConfig -> tokenEndpointConfig.accessTokenResponseClient(this.tokenEndpointCustomizer()));
+                                             oauth2login.successHandler(authenticationSuccessHandler);
+                                            });
         return http.build();
     }
     /**
@@ -139,5 +142,9 @@ public class OAuth2Specialization {
         HashMap<String, Object> additionalParams = new HashMap<>();
         additionalParams.put("sso",1);
         return additionalParams;
+    }
+    @Bean
+    public AuthenticationSuccessHandler authenticationSuccessHandler(@Value("${ui.uri}") String uiURI){
+        return new SimpleUrlAuthenticationSuccessHandler(uiURI);
     }
 }
