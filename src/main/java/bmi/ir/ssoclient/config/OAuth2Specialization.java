@@ -85,7 +85,7 @@ public class OAuth2Specialization {
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .scope("openid", "profile", "email", "address", "phone")// openid scope is required for oidc authenticationProvider
                 .authorizationUri("https://accounts.google.com/o/oauth2/auth")
-                .redirectUri("http://localhost:8080/login/oauth2/code/")
+                .redirectUri("{baseUrl}/login/oauth2/code/")
                 .tokenUri("https://oauth2.googleapis.com/token") // to acquire an access-token by authorization grant request
                 .jwkSetUri("https://www.googleapis.com/oauth2/v3/certs") // id-token Signature Verifier
                 .jwkSetUri("http://localhost/google/jwkset") //mocked jwk set
@@ -101,7 +101,7 @@ public class OAuth2Specialization {
                 .authorizationUri("http://185.135.30.10:9443/identity/oauth2/auth/authorize")
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .scope("batch-user-info")
-                .redirectUri("http://localhost:8080/login/oauth2/code/")
+                .redirectUri("{baseUrl}/login/oauth2/code/")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .tokenUri("http://185.135.30.10:9443/identity/oauth2/auth/token")
                 .build();
