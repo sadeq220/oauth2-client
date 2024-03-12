@@ -1,10 +1,16 @@
 package bmi.ir.ssoclient.config;
 
+import bmi.ir.ssoclient.userInfo.UserInfoJWT;
+import bmi.ir.ssoclient.userInfo.model.UserInfoModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.codec.Hex;
 import org.springframework.web.servlet.function.*;
 
@@ -18,13 +24,15 @@ import java.util.function.Function;
 @Configuration
 public class APIGatewayRouterConfig {
     private final SecureRandom nonBlockingPRNG;
+    private final UserInfoJWT userInfoJWT;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     public static final String CORRELATION_ID_HEADER = "Correlation-id";
     public static final String REQUEST_TIMESTAMP_ATTRIBUTE = "request.forward.time";
 
-    public APIGatewayRouterConfig(){
+    public APIGatewayRouterConfig(UserInfoJWT userInfoJWT){
         try {
             this.nonBlockingPRNG = SecureRandom.getInstance("SHA1PRNG");
+            this.userInfoJWT = userInfoJWT;
         } catch (NoSuchAlgorithmException e) {
             logger.error(this.getClass()+" constructing error!",e);
             throw new RuntimeException(this.getClass()+" constructing error!",e);
@@ -41,6 +49,7 @@ public class APIGatewayRouterConfig {
      */
     public RouterFunction<ServerResponse> getRoute(){
         return RouterFunctions.route()
+                .before(addJWT())
                 .before(addCorrelationId()) // Pre-filter
                 .before(addTimestamp())
                 .after(collectMetrics()) // Post-filter
@@ -55,6 +64,20 @@ public class APIGatewayRouterConfig {
             byte[] randomBytes=new byte[8];
             nonBlockingPRNG.nextBytes(randomBytes);
             builder.header(CORRELATION_ID_HEADER, new String(Hex.encode(randomBytes)));
+            return builder.build();
+        };
+    }
+    public Function<ServerRequest,ServerRequest> addJWT(){
+        return serverRequest -> {
+            ServerRequest.Builder builder = ServerRequest.from(serverRequest);
+            SecurityContext context = SecurityContextHolder.getContext();
+            Authentication authentication = context.getAuthentication();
+            if (!authentication.isAuthenticated()) {
+                throw new RuntimeException("user in not authenticated!");
+            }
+            UserInfoModel principal = (UserInfoModel) authentication.getPrincipal();
+            String jwt = userInfoJWT.createJWT(principal);
+            builder.header(HttpHeaders.AUTHORIZATION,"Bearer "+jwt);
             return builder.build();
         };
     }
