@@ -26,7 +26,7 @@ public class APIGatewayRouterConfig {
     private final SecureRandom nonBlockingPRNG;
     private final UserInfoJWT userInfoJWT;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    public static final String CORRELATION_ID_HEADER = "Correlation-id";
+    public static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
     public static final String REQUEST_TIMESTAMP_ATTRIBUTE = "request.forward.time";
 
     public APIGatewayRouterConfig(UserInfoJWT userInfoJWT){
@@ -58,6 +58,9 @@ public class APIGatewayRouterConfig {
                 .build();
     }
 
+    /**
+     * One way to tie the microservice activities together is to use a special ID for each transaction called a “correlation ID”
+     */
     public Function<ServerRequest,ServerRequest> addCorrelationId(){
         return serverRequest -> {
             ServerRequest.Builder builder = ServerRequest.from(serverRequest);
