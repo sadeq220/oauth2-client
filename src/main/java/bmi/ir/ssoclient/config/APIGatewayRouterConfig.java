@@ -60,6 +60,7 @@ public class APIGatewayRouterConfig {
 
     /**
      * One way to tie the microservice activities together is to use a special ID for each transaction called a “correlation ID”
+     * see https://www.bandwidth.com/blog/a-recipe-for-adding-correlation-ids-in-java-microservices/
      */
     public Function<ServerRequest,ServerRequest> addCorrelationId(){
         return serverRequest -> {
