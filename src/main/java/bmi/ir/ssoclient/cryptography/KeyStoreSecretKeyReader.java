@@ -3,6 +3,7 @@ package bmi.ir.ssoclient.cryptography;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import java.security.cert.CertificateException;
 import java.util.Map;
 
 @Component
+@Profile("!test")
 public class KeyStoreSecretKeyReader implements SecretKeyReader{
     private final String keyStorePassword;
     private final Resource keyStore;
