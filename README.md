@@ -47,7 +47,19 @@ Client must register itself with authorization server first, and in return obtai
 - **access token response**: The authorization server authenticates the client and validates the authorization grant, and if valid, issues an access token.     
 
 ### Authorization grant
+An authorization grant is a credential representing the resource owner's authorization (to access its protected resources)     
+used by the client to obtain an access token.    
 
+The RFC specification defines four grant types:     
+- authorization code
+  - prevalent method for web app clients
+  - client needs to authentication itself to obtain *access token*
+- implicit
+  - client obtains *access token* directly without intermediate credentials (such as an authorization code).    
+  - authorization server does not authenticate the client.    
+  - suitable for in-browser clients such as javascript client
+- resource owner password credentials    
+- client credentials
 ### References
 - [OAuth 2.0 RFC](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1)
 - [Auth0 IAM](https://auth0.com/docs/get-started/identity-fundamentals/identity-and-access-management) 
