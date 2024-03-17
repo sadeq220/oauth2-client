@@ -59,7 +59,11 @@ The RFC specification defines four grant types:
   - authorization server does not authenticate the client.    
   - suitable for in-browser clients such as javascript client
 - resource owner password credentials    
+  - The resource owner password credentials (i.e., username and password) can be used directly as an authorization grant to obtain an access token.   
+  - credentials should be used once to exchange for long term *access token* and shouldn't be stored.
+  - suitable for highly trusted desktop app
 - client credentials
+  - when the client is also the resource owner
 ### References
 - [OAuth 2.0 RFC](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1)
 - [Auth0 IAM](https://auth0.com/docs/get-started/identity-fundamentals/identity-and-access-management) 
