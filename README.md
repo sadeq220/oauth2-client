@@ -64,6 +64,10 @@ The RFC specification defines four grant types:
   - suitable for highly trusted desktop app
 - client credentials
   - when the client is also the resource owner
+
+#### Authorization code flow
+simple *authorization code* flow with Basic client authentication
+![authorization code flow](doc/img/authorization_code_flow.jpg)
 ### References
 - [OAuth 2.0 RFC](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1)
 - [Auth0 IAM](https://auth0.com/docs/get-started/identity-fundamentals/identity-and-access-management) 
