@@ -72,8 +72,10 @@ public class OAuth2Specialization {
      */
 
     @Bean
-    public ClientRegistrationRepository oauthRegistrationRepository(SecretKeyReader secretKeyReader){
-        List<ClientRegistration> clientRegistrations = List.of(this.googleClientRegistration(),this.bamClientRegistration(secretKeyReader.getOAuth2ClientSecretKey()));
+    public ClientRegistrationRepository oauthRegistrationRepository(SecretKeyReader secretKeyReader,BaamClientRegistrationProperties baamClientRegistrationProperties){
+        List<ClientRegistration> clientRegistrations = List.of(
+                this.googleClientRegistration(),
+                this.bamClientRegistration(secretKeyReader.getOAuth2ClientSecretKey(),baamClientRegistrationProperties));
         return new InMemoryClientRegistrationRepository(clientRegistrations);
     }
     private ClientRegistration googleClientRegistration(){
@@ -93,17 +95,17 @@ public class OAuth2Specialization {
                 .clientName("Google")
                 .build();
     }
-    private ClientRegistration bamClientRegistration(byte[] clientSecretKey){
+    private ClientRegistration bamClientRegistration(byte[] clientSecretKey,BaamClientRegistrationProperties clientProperties){
         return ClientRegistration
                 .withRegistrationId("baam")
-                .clientId("mika-local-client")
+                .clientId(clientProperties.getClientId())
                 .clientSecret(new String(clientSecretKey))
-                .authorizationUri("http://185.135.30.10:9443/identity/oauth2/auth/authorize")
-                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                .scope("batch-user-info")
-                .redirectUri("{baseUrl}/login/oauth2/code/")
-                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-                .tokenUri("http://185.135.30.10:9443/identity/oauth2/auth/token")
+                .authorizationUri(clientProperties.getAuthorizationUri())
+                .authorizationGrantType(clientProperties.getAuthorizationGrantType())
+                .scope(clientProperties.getScopes())
+                .redirectUri(clientProperties.getRedirectUri())
+                .clientAuthenticationMethod(clientProperties.getClientAuthenticationMethod())
+                .tokenUri(clientProperties.getTokenUri())
                 .build();
     }
     private DelegatingAuthenticationEntryPoint authenticationEntryPoint()  {
