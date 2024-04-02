@@ -54,7 +54,8 @@ public class OAuth2Specialization {
      */
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    OAuth2AuthorizationRequestResolver oAuth2AuthorizationRequestResolver,
-                                                   AuthenticationSuccessHandler authenticationSuccessHandler) throws Exception {
+                                                   AuthenticationSuccessHandler authenticationSuccessHandler,
+                                                   AuthenticationFailureHandler authenticationFailureHandler) throws Exception {
         http
                 .csrf(httpSecurityCsrfConfigurer -> {httpSecurityCsrfConfigurer.disable();})
                 .authorizeHttpRequests((authorizeRequests)->authorizeRequests.requestMatchers("/air/**").permitAll().requestMatchers("/oauth2/**").permitAll().anyRequest().authenticated())
@@ -64,6 +65,7 @@ public class OAuth2Specialization {
                 .oauth2Login((oauth2login)->{oauth2login.authorizationEndpoint(authorizationEndpointConfig -> authorizationEndpointConfig.authorizationRequestResolver(oAuth2AuthorizationRequestResolver));
                                              oauth2login.tokenEndpoint(tokenEndpointConfig -> tokenEndpointConfig.accessTokenResponseClient(this.tokenEndpointCustomizer()));
                                              oauth2login.successHandler(authenticationSuccessHandler);
+                                             oauth2login.failureHandler(authenticationFailureHandler);
                                             });
         return http.build();
     }
@@ -148,5 +150,9 @@ public class OAuth2Specialization {
     @Bean
     public AuthenticationSuccessHandler authenticationSuccessHandler(@Value("${ui.uri}") String uiURI){
         return new SimpleUrlAuthenticationSuccessHandler(uiURI);
+    }
+    @Bean
+    public AuthenticationFailureHandler authenticationFailureHandler(@Value("${ui.uri}") String uiURI){
+        return new SimpleUrlAuthenticationFailureHandler(uiURI+"?error");
     }
 }
