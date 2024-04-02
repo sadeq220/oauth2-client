@@ -63,7 +63,7 @@ public class OAuth2Specialization {
                 //.oauth2Client((oauth2client)->{})
                 .exceptionHandling(exceptionHandlingConfigurer -> {exceptionHandlingConfigurer.authenticationEntryPoint(this.authenticationEntryPoint());})
                 .oauth2Login((oauth2login)->{oauth2login.authorizationEndpoint(authorizationEndpointConfig -> authorizationEndpointConfig.authorizationRequestResolver(oAuth2AuthorizationRequestResolver));
-                                             oauth2login.tokenEndpoint(tokenEndpointConfig -> tokenEndpointConfig.accessTokenResponseClient(this.tokenEndpointCustomizer()));
+                                             //oauth2login.tokenEndpoint(tokenEndpointConfig -> tokenEndpointConfig.accessTokenResponseClient(this.tokenEndpointCustomizer()));
                                              oauth2login.successHandler(authenticationSuccessHandler);
                                              oauth2login.failureHandler(authenticationFailureHandler);
                                             });
