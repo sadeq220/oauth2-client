@@ -1,6 +1,7 @@
 package bmi.ir.ssoclient.config;
 
 import bmi.ir.ssoclient.cryptography.SecretKeyReader;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,14 +29,14 @@ import org.springframework.security.web.authentication.*;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Configuration
 @EnableWebSecurity
@@ -55,10 +56,13 @@ public class OAuth2Specialization {
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    OAuth2AuthorizationRequestResolver oAuth2AuthorizationRequestResolver,
                                                    AuthenticationSuccessHandler authenticationSuccessHandler,
-                                                   AuthenticationFailureHandler authenticationFailureHandler) throws Exception {
+                                                   AuthenticationFailureHandler authenticationFailureHandler,
+                                                   @Qualifier("mvcCorsConfiguration") CorsConfigurationSource corsConfigurationSource
+                                                   ) throws Exception {
         http
                 .csrf(httpSecurityCsrfConfigurer -> {httpSecurityCsrfConfigurer.disable();})
                 .authorizeHttpRequests((authorizeRequests)->authorizeRequests.requestMatchers("/air/**").permitAll().requestMatchers("/oauth2/**").permitAll().anyRequest().authenticated())
+                .cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource))
                // .authorizeHttpRequests((authorizeRequests)->authorizeRequests.requestMatchers("/air/**").permitAll().anyRequest().authenticated()) // request matcher part of SecurityFilterChain
                 //.oauth2Client((oauth2client)->{})
                 .exceptionHandling(exceptionHandlingConfigurer -> {exceptionHandlingConfigurer.authenticationEntryPoint(this.authenticationEntryPoint());})
@@ -68,6 +72,20 @@ public class OAuth2Specialization {
                                              oauth2login.failureHandler(authenticationFailureHandler);
                                             });
         return http.build();
+    }
+
+    /**
+     * relax cross origin policies for UI
+     */
+    @Bean
+    public CorsConfigurationSource mvcCorsConfiguration(@Value("${ui.uri}") String highlyTrustedURI){
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.setAllowedOrigins(Arrays.asList(UrlUtils.getOriginPart(highlyTrustedURI)));
+        corsConfiguration.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE"));
+        corsConfiguration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**",corsConfiguration);
+        return source;
     }
     /**
      * A repository for OAuth 2.0 / OpenID Connect 1.0 {@link ClientRegistration}(s).
