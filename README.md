@@ -67,7 +67,21 @@ The RFC specification defines four grant types:
 
 #### Authorization code flow
 simple *authorization code* flow with Basic client authentication
-![authorization code flow](doc/img/authorization_code_flow.jpg)
+![authorization code flow](doc/img/authorization_code_flow.jpg)    
+
+---
+### BFF pattern
+Replace **general purpose API backend** with dedicated one backend per **user experience**.    
+The general purpose API backend(API Gateway):     
+A first step in accommodating more than one type of UI is normally to provide a single, server-side API, and add more functionality as required over time to support new types of mobile interaction:     
+   the nature of a mobile experience often differs drastically from a desktop web experience. Firstly, the affordances of a mobile device are very different. We have less screen real estate, which means we can display less data. Opening lots of connections to server-side resources can drain battery life and limited data plans.     
+   So in practice, our mobile devices will want to make different calls, fewer calls, and will want to display different (and probably less) data than their desktop counterparts. This means that we need to add additional functionality to our API backend to support our mobile interfaces.     
+
+The BFF is tightly focused on a single UI.     
+from Chris Richardson definition:     
+>  A per-client API gateway providing each client with an API. This is the BFF pattern.   
+
 ### References
 - [OAuth 2.0 RFC](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1)
 - [Auth0 IAM](https://auth0.com/docs/get-started/identity-fundamentals/identity-and-access-management) 
+- [sam newman BFF pattern](https://samnewman.io/patterns/architectural/bff/#general)
