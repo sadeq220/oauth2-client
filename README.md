@@ -78,6 +78,12 @@ A first step in accommodating more than one type of UI is normally to provide a 
    So in practice, our mobile devices will want to make different calls, fewer calls, and will want to display different (and probably less) data than their desktop counterparts. This means that we need to add additional functionality to our API backend to support our mobile interfaces.     
 
 The BFF is tightly focused on a single UI.     
+Place **reverse proxy** in front of BFF for:
+- Caching
+  - > BFF can also simplify caching somewhat as you can place a reverse proxy in front of the BFF, allowing you to cache the results of aggregated calls.   
+- same origin between SPA and BFF
+- SSL certificates
+
 from Chris Richardson definition:     
 >  A per-client API gateway providing each client with an API. This is the BFF pattern.   
 
