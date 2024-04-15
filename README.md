@@ -87,6 +87,9 @@ Place **reverse proxy** in front of BFF for:
 from Chris Richardson definition:     
 >  A per-client API gateway providing each client with an API. This is the BFF pattern.   
 
+Also, according to bff-patterns.com BFF alternative solutions like *API Gateway* or *GraphQL* might be more suitable,     
+    In cases where client platforms are highly similar or few.      
+
 ### References
 - [OAuth 2.0 RFC](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1)
 - [Auth0 IAM](https://auth0.com/docs/get-started/identity-fundamentals/identity-and-access-management) 
