@@ -1,4 +1,4 @@
-package bmi.ir.ssoclient;
+package bmi.ir.ssoclient.unittest;
 
 import bmi.ir.ssoclient.config.UrlUtils;
 import org.junit.jupiter.api.Assertions;

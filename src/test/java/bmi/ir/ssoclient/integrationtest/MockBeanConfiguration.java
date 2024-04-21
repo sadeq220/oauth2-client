@@ -1,4 +1,4 @@
-package bmi.ir.ssoclient;
+package bmi.ir.ssoclient.integrationtest;
 
 import bmi.ir.ssoclient.cryptography.SecretKeyReader;
 import org.springframework.boot.test.context.TestConfiguration;
