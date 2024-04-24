@@ -86,6 +86,29 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+
+			<plugin>
+				<!-- configuration options at https://github.com/GoogleContainerTools/jib/blob/master/jib-maven-plugin/README.md -->
+				<groupId>com.google.cloud.tools</groupId>
+				<artifactId>jib-maven-plugin</artifactId>
+				<version>3.4.1</version>
+				<configuration>
+					<to>
+						<image>api-gateway:${project.version}</image>
+					</to>
+					<from>
+						<image>docker://eclipse-temurin:17-jdk-alpine</image>
+					</from>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>dockerBuild</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
