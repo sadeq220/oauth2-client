@@ -88,6 +88,7 @@
 			</plugin>
 
 			<plugin>
+				<!-- google jib plugin separates java application into multiple build layers-->
 				<!-- configuration options at https://github.com/GoogleContainerTools/jib/blob/master/jib-maven-plugin/README.md -->
 				<groupId>com.google.cloud.tools</groupId>
 				<artifactId>jib-maven-plugin</artifactId>
@@ -99,6 +100,15 @@
 					<from>
 						<image>docker://eclipse-temurin:17-jdk-alpine</image>
 					</from>
+					<container>
+						<!-- override the default entrypoint to accommodate environment variables-->
+						<entrypoint>
+							<arg>/bin/sh</arg>
+							<arg>-c</arg>
+							<!-- Java 9+ @-argument file -->
+							<arg>java $JAVA_OPTS -cp @/app/jib-classpath-file @/app/jib-main-class-file</arg>
+						</entrypoint>
+					</container>
 				</configuration>
 				<executions>
 					<execution>
