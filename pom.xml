@@ -96,6 +96,7 @@
 				<configuration>
 					<to>
 						<image>api-gateway:${project.version}</image>
+						<tags>latest</tags>
 					</to>
 					<from>
 						<image>docker://eclipse-temurin:17-jdk-alpine</image>
