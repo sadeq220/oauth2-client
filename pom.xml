@@ -89,6 +89,7 @@
 
 			<plugin>
 				<!-- google jib plugin separates java application into multiple build layers-->
+				<!-- how to pass environment variables to jib https://stackoverflow.com/questions/59357410/jib-how-to-use-environmental-variables-from-base-image-->
 				<!-- configuration options at https://github.com/GoogleContainerTools/jib/blob/master/jib-maven-plugin/README.md -->
 				<groupId>com.google.cloud.tools</groupId>
 				<artifactId>jib-maven-plugin</artifactId>
