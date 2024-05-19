@@ -85,6 +85,7 @@ public class OAuth2Specialization {
         corsConfiguration.setAllowedOrigins(Arrays.asList(UrlUtils.getOriginPart(highlyTrustedURI)));
         corsConfiguration.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE"));
         corsConfiguration.setAllowCredentials(true);
+        corsConfiguration.addAllowedHeader("*");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**",corsConfiguration);
         return source;
