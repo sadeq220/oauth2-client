@@ -10,17 +10,18 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2ClientConfigurer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.security.crypto.keygen.StringKeyGenerator;
 import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequestEntityConverter;
-import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.*;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.server.DefaultServerOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
@@ -28,58 +29,62 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.*;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.netty.http.server.HttpServer;
 
 import java.net.URI;
 import java.util.*;
 
 @Configuration
-@EnableWebSecurity
-//@EnableWebFluxSecurity // for reactive filters
+@EnableWebFluxSecurity // for reactive filters
 public class OAuth2Specialization {
     /**
-     * for reactive securityFilterChain
+     * reactive securityFilterChain
      */
-//    @Bean
-//    public SecurityWebFilterChain securityConfigurer(ServerHttpSecurity http) {
-//    return null;
-//    }
     @Bean
-    /**
-     * oauth2 filter chain
-     */
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   OAuth2AuthorizationRequestResolver oAuth2AuthorizationRequestResolver,
-                                                   AuthenticationSuccessHandler authenticationSuccessHandler,
-                                                   AuthenticationFailureHandler authenticationFailureHandler,
-                                                   @Qualifier("mvcCorsConfiguration") CorsConfigurationSource corsConfigurationSource
-                                                   ) throws Exception {
-        http
-                .csrf(Customizer.withDefaults())
-                .authorizeHttpRequests((authorizeRequests)->authorizeRequests.requestMatchers("/air/**").permitAll().requestMatchers("/oauth2/**").permitAll().anyRequest().authenticated())
-                .cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource))
-               // .authorizeHttpRequests((authorizeRequests)->authorizeRequests.requestMatchers("/air/**").permitAll().anyRequest().authenticated()) // request matcher part of SecurityFilterChain
-                //.oauth2Client((oauth2client)->{})
-                .exceptionHandling(exceptionHandlingConfigurer -> {exceptionHandlingConfigurer.authenticationEntryPoint(this.authenticationEntryPoint());})
-                .oauth2Login((oauth2login)->{oauth2login.authorizationEndpoint(authorizationEndpointConfig -> authorizationEndpointConfig.authorizationRequestResolver(oAuth2AuthorizationRequestResolver));
-                                             //oauth2login.tokenEndpoint(tokenEndpointConfig -> tokenEndpointConfig.accessTokenResponseClient(this.tokenEndpointCustomizer()));
-                                             oauth2login.successHandler(authenticationSuccessHandler);
-                                             oauth2login.failureHandler(authenticationFailureHandler);
-                                            });
-        return http.build();
+    public SecurityWebFilterChain securityConfigurer(ServerHttpSecurity http,
+                                                     ServerOAuth2AuthorizationRequestResolver reactiveOAuth2AuthorizationRequestResolver) {
+         http.csrf(Customizer.withDefaults())
+                .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec.pathMatchers("/air/**","/oauth2/**").permitAll().anyExchange().authenticated())
+                .oauth2Login(oAuth2LoginSpec -> oAuth2LoginSpec.authorizationRequestResolver(reactiveOAuth2AuthorizationRequestResolver));
+         return http.build();
     }
+//    @Bean
+//    /**
+//     * oauth2 filter chain
+//     */
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+//                                                   OAuth2AuthorizationRequestResolver oAuth2AuthorizationRequestResolver,
+//                                                   AuthenticationSuccessHandler authenticationSuccessHandler,
+//                                                   AuthenticationFailureHandler authenticationFailureHandler,
+//                                                   @Qualifier("mvcCorsConfiguration") CorsConfigurationSource corsConfigurationSource
+//                                                   ) throws Exception {
+//        http.securityMatcher("/air/**","/oauth2/**","/protected/**")
+//                .csrf(Customizer.withDefaults())
+//                .authorizeHttpRequests((authorizeRequests)->authorizeRequests.requestMatchers("/air/**").permitAll().requestMatchers("/oauth2/**").permitAll().anyRequest().authenticated())
+//                .cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource))
+//               // .authorizeHttpRequests((authorizeRequests)->authorizeRequests.requestMatchers("/air/**").permitAll().anyRequest().authenticated()) // request matcher part of SecurityFilterChain
+//                //.oauth2Client((oauth2client)->{})
+//                .exceptionHandling(exceptionHandlingConfigurer -> {exceptionHandlingConfigurer.authenticationEntryPoint(this.authenticationEntryPoint());})
+//                .oauth2Login((oauth2login)->{oauth2login.authorizationEndpoint(authorizationEndpointConfig -> authorizationEndpointConfig.authorizationRequestResolver(oAuth2AuthorizationRequestResolver));
+//                                             //oauth2login.tokenEndpoint(tokenEndpointConfig -> tokenEndpointConfig.accessTokenResponseClient(this.tokenEndpointCustomizer()));
+//                                             oauth2login.successHandler(authenticationSuccessHandler);
+//                                             oauth2login.failureHandler(authenticationFailureHandler);
+//                                            });
+//        return http.build();
+//    }
 
     /**
      * relax cross origin policies for UI
      */
-    @Bean
+    //@Bean
     public CorsConfigurationSource mvcCorsConfiguration(@Value("${ui.uri}") String highlyTrustedURI){
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedOrigins(Arrays.asList(UrlUtils.getOriginPart(highlyTrustedURI)));
@@ -93,13 +98,12 @@ public class OAuth2Specialization {
     /**
      * A repository for OAuth 2.0 / OpenID Connect 1.0 {@link ClientRegistration}(s).
      */
-
     @Bean
-    public ClientRegistrationRepository oauthRegistrationRepository(SecretKeyReader secretKeyReader,BaamClientRegistrationProperties baamClientRegistrationProperties){
+    public ReactiveClientRegistrationRepository reactiveClientRegistrationRepository(SecretKeyReader secretKeyReader,BaamClientRegistrationProperties baamClientRegistrationProperties){
         List<ClientRegistration> clientRegistrations = List.of(
                 this.googleClientRegistration(),
                 this.bamClientRegistration(secretKeyReader.getOAuth2ClientSecretKey(),baamClientRegistrationProperties));
-        return new InMemoryClientRegistrationRepository(clientRegistrations);
+        return new InMemoryReactiveClientRegistrationRepository(clientRegistrations);
     }
     private ClientRegistration googleClientRegistration(){
         return ClientRegistration
@@ -139,6 +143,16 @@ public class OAuth2Specialization {
         return new DelegatingAuthenticationEntryPoint(matcherToEntryPoint);
     }
     @Bean
+    public ServerOAuth2AuthorizationRequestResolver reactiveAuthorizationRequestResolver(ReactiveClientRegistrationRepository reactiveClientRegistrationRepository){
+        DefaultServerOAuth2AuthorizationRequestResolver reactiveOAuth2AuthorizationRequestResolver = new DefaultServerOAuth2AuthorizationRequestResolver(reactiveClientRegistrationRepository);
+        StringKeyGenerator keyGenerator = KeyGenerators.string();
+        reactiveOAuth2AuthorizationRequestResolver.setAuthorizationRequestCustomizer(builder -> {
+            builder.additionalParameters(this.authorizationUriAdditionalParams());
+            builder.state(keyGenerator.generateKey());// use HexEncodingStringKeyGenerator because baam does not accept base64 encoding
+        });
+        return reactiveOAuth2AuthorizationRequestResolver;
+    }
+   // @Bean
     public OAuth2AuthorizationRequestResolver authorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository){
         DefaultOAuth2AuthorizationRequestResolver defaultOAuth2AuthorizationRequestResolver = new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository, "/oauth2/authorization");
         StringKeyGenerator keyGenerator = KeyGenerators.string();
@@ -168,11 +182,11 @@ public class OAuth2Specialization {
         additionalParams.put("sso",1);
         return additionalParams;
     }
-    @Bean
+    //@Bean
     public AuthenticationSuccessHandler authenticationSuccessHandler(@Value("${ui.uri}") String uiURI){
         return new SimpleUrlAuthenticationSuccessHandler(uiURI);
     }
-    @Bean
+   // @Bean
     public AuthenticationFailureHandler authenticationFailureHandler(@Value("${ui.uri}") String uiURI){
         return new SimpleUrlAuthenticationFailureHandler(uiURI+"?error");
     }

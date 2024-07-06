@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Base64;
 
-@Component
+//@Component
 /**
  * automatically registered with OAuth2LoginAuthenticationProvider
  * the input is result of tokenUri endpoint

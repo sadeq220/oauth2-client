@@ -4,7 +4,8 @@ import bmi.ir.ssoclient.userInfo.UserInfoJWT;
 import bmi.ir.ssoclient.userInfo.model.UserInfoModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -12,13 +13,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.codec.Hex;
-import org.springframework.web.servlet.function.*;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 
 @Configuration
@@ -38,30 +36,38 @@ public class APIGatewayRouterConfig {
             throw new RuntimeException(this.getClass()+" constructing error!",e);
         }
     }
+//    @Bean
+//    /**
+//     * add routing to spring cloud gateway with normal WebMvc.fn
+//     * In WebMvc.fn, an HTTP request is handled with a HandlerFunction: a function that takes ServerRequest and returns a ServerResponse.
+//     * Both the request and the response object have immutable contracts.
+//     * spring cloud gateway provides special HandlerFunction that routs request to another host.
+//     * use RequestPredicate and HandlerFunction
+//     * use HandlerFunctions.http() to define a 'Host' header of request
+//     */
+//    public RouterFunction<ServerResponse> getRoute(){
+//        return RouterFunctions.route()
+//                .before(addJWT())
+//                .before(addCorrelationId()) // Pre-filter
+//                .before(addTimestamp())
+//                .after(collectMetrics()) // Post-filter
+//                .GET("gateway/**",HandlerFunctions.http("http://localhost:9810"))
+//                .GET("/google/**",HandlerFunctions.http("http://localhost"))
+//                .build();
+//    }
+
     @Bean
-    /**
-     * add routing to spring cloud gateway with normal WebMvc.fn
-     * In WebMvc.fn, an HTTP request is handled with a HandlerFunction: a function that takes ServerRequest and returns a ServerResponse.
-     * Both the request and the response object have immutable contracts.
-     * spring cloud gateway provides special HandlerFunction that routs request to another host.
-     * use RequestPredicate and HandlerFunction
-     * use HandlerFunctions.http() to define a 'Host' header of request
-     */
-    public RouterFunction<ServerResponse> getRoute(){
-        return RouterFunctions.route()
-                .before(addJWT())
-                .before(addCorrelationId()) // Pre-filter
-                .before(addTimestamp())
-                .after(collectMetrics()) // Post-filter
-                .GET("gateway/**",HandlerFunctions.http("http://localhost:9810"))
-                .GET("/google/**",HandlerFunctions.http("http://localhost"))
+    public RouteLocator customRouteLocator(RouteLocatorBuilder builder){
+        return builder.routes()
+                .route(predicateSpec -> predicateSpec.path("/commons/**")
+                        .uri("http://localhost"))
                 .build();
     }
-
     /**
      * One way to tie the microservice activities together is to use a special ID for each transaction called a “correlation ID”
      * see https://www.bandwidth.com/blog/a-recipe-for-adding-correlation-ids-in-java-microservices/
      */
+    /*
     public Function<ServerRequest,ServerRequest> addCorrelationId(){
         return serverRequest -> {
             ServerRequest.Builder builder = ServerRequest.from(serverRequest);
@@ -102,5 +108,5 @@ public class APIGatewayRouterConfig {
         logger.info("endpoint:{} {} correlationId:{} rtt:{}",serverRequest.method(),serverRequest.uri(),correlationIdHeader,rtt);
         return serverResponse;
     };
-    }
+    }*/
 }
