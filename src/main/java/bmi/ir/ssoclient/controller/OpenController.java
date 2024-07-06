@@ -6,6 +6,7 @@ import bmi.ir.ssoclient.userInfo.model.UserInfoModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.server.WebFilterChainProxy;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -15,9 +16,8 @@ import java.util.Properties;
 @RestController
 @RequestMapping("/air")
 public class OpenController {
-//    @Autowired
-//    @Qualifier("springSecurityFilterChain")
-//    private Filter filterChainProxy;// spring security FilterChainProxy
+    @Autowired
+   private WebFilterChainProxy webFilterChainProxy;// spring-security WebFilterChainProxy, a WebFilter which delegates the request to a list of SecurityWebFilterChain
     @Autowired
     private UserInfoAccessor userInfoAccessor;
 
