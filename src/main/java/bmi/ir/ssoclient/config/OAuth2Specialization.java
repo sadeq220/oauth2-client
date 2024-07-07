@@ -1,14 +1,10 @@
 package bmi.ir.ssoclient.config;
 
 import bmi.ir.ssoclient.cryptography.SecretKeyReader;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2ClientConfigurer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.keygen.KeyGenerators;
@@ -17,7 +13,10 @@ import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationC
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequestEntityConverter;
-import org.springframework.security.oauth2.client.registration.*;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryReactiveClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.server.DefaultServerOAuth2AuthorizationRequestResolver;
@@ -25,22 +24,23 @@ import org.springframework.security.oauth2.client.web.server.ServerOAuth2Authori
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.*;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.web.server.DelegatingServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationEntryPoint;
+import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.server.ServerWebExchange;
-import reactor.netty.http.server.HttpServer;
 
-import java.net.URI;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Configuration
 @EnableWebFluxSecurity // for reactive filters
@@ -51,9 +51,13 @@ public class OAuth2Specialization {
     @Bean
     public SecurityWebFilterChain securityConfigurer(ServerHttpSecurity http,
                                                      ServerOAuth2AuthorizationRequestResolver reactiveOAuth2AuthorizationRequestResolver) {
-         http.csrf(Customizer.withDefaults())
-                .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec.pathMatchers("/air/**","/oauth2/**").permitAll().anyExchange().authenticated())
-                .oauth2Login(oAuth2LoginSpec -> oAuth2LoginSpec.authorizationRequestResolver(reactiveOAuth2AuthorizationRequestResolver));
+        http.csrf(Customizer.withDefaults())
+                .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec.pathMatchers("/air/**", "/oauth2/**").permitAll().anyExchange().authenticated())
+                .exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec.authenticationEntryPoint(this.authenticationEntryPoint()))
+                .oauth2Login(oAuth2LoginSpec -> {
+                    oAuth2LoginSpec.authorizationRequestResolver(reactiveOAuth2AuthorizationRequestResolver);
+                    oAuth2LoginSpec.authenticationMatcher(new PathPatternParserServerWebExchangeMatcher("/login/oauth2/code/"));
+                });
          return http.build();
     }
 //    @Bean
@@ -135,12 +139,12 @@ public class OAuth2Specialization {
                 .tokenUri(clientProperties.getTokenUri())
                 .build();
     }
-    private DelegatingAuthenticationEntryPoint authenticationEntryPoint()  {
-        LinkedHashMap<RequestMatcher, AuthenticationEntryPoint> matcherToEntryPoint = new LinkedHashMap<>();
-        AntPathRequestMatcher antPathRequestMatcher = new AntPathRequestMatcher("/**");
-        LoginUrlAuthenticationEntryPoint loginUrlAuthenticationEntryPoint = new LoginUrlAuthenticationEntryPoint("/oauth2/authorization/baam");
-        matcherToEntryPoint.put(antPathRequestMatcher,loginUrlAuthenticationEntryPoint);
-        return new DelegatingAuthenticationEntryPoint(matcherToEntryPoint);
+    private DelegatingServerAuthenticationEntryPoint authenticationEntryPoint()  {
+        PathPatternParserServerWebExchangeMatcher pathMatcher = new PathPatternParserServerWebExchangeMatcher("/**");
+        RedirectServerAuthenticationEntryPoint redirectServerAuthenticationEntryPoint = new RedirectServerAuthenticationEntryPoint("/oauth2/authorization/baam");
+
+        DelegatingServerAuthenticationEntryPoint.DelegateEntry delegateEntry = new DelegatingServerAuthenticationEntryPoint.DelegateEntry(pathMatcher,redirectServerAuthenticationEntryPoint);
+        return new DelegatingServerAuthenticationEntryPoint(delegateEntry);
     }
     @Bean
     public ServerOAuth2AuthorizationRequestResolver reactiveAuthorizationRequestResolver(ReactiveClientRegistrationRepository reactiveClientRegistrationRepository){
