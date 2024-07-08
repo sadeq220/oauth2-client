@@ -30,7 +30,7 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.server.DelegatingServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.authentication.RedirectServerAuthenticationEntryPoint;
+import org.springframework.security.web.server.authentication.*;
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.cors.CorsConfiguration;
@@ -50,13 +50,17 @@ public class OAuth2Specialization {
      */
     @Bean
     public SecurityWebFilterChain securityConfigurer(ServerHttpSecurity http,
-                                                     ServerOAuth2AuthorizationRequestResolver reactiveOAuth2AuthorizationRequestResolver) {
+                                                     ServerOAuth2AuthorizationRequestResolver reactiveOAuth2AuthorizationRequestResolver,
+                                                     ServerAuthenticationSuccessHandler authenticationSuccessHandler,
+                                                     ServerAuthenticationFailureHandler authenticationFailureHandler) {
         http.csrf(Customizer.withDefaults())
                 .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec.pathMatchers("/air/**", "/oauth2/**").permitAll().anyExchange().authenticated())
                 .exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec.authenticationEntryPoint(this.authenticationEntryPoint()))
                 .oauth2Login(oAuth2LoginSpec -> {
                     oAuth2LoginSpec.authorizationRequestResolver(reactiveOAuth2AuthorizationRequestResolver);
                     oAuth2LoginSpec.authenticationMatcher(new PathPatternParserServerWebExchangeMatcher("/login/oauth2/code/"));
+                    oAuth2LoginSpec.authenticationSuccessHandler(authenticationSuccessHandler);
+                    oAuth2LoginSpec.authenticationFailureHandler(authenticationFailureHandler);
                 });
          return http.build();
     }
@@ -186,12 +190,12 @@ public class OAuth2Specialization {
         additionalParams.put("sso",1);
         return additionalParams;
     }
-    //@Bean
-    public AuthenticationSuccessHandler authenticationSuccessHandler(@Value("${ui.uri}") String uiURI){
-        return new SimpleUrlAuthenticationSuccessHandler(uiURI);
+    @Bean
+    public ServerAuthenticationSuccessHandler authenticationSuccessHandler(@Value("${ui.uri}") String uiURI){
+        return new RedirectServerAuthenticationSuccessHandler(uiURI);
     }
-   // @Bean
-    public AuthenticationFailureHandler authenticationFailureHandler(@Value("${ui.uri}") String uiURI){
-        return new SimpleUrlAuthenticationFailureHandler(uiURI+"?error");
+    @Bean
+    public ServerAuthenticationFailureHandler authenticationFailureHandler(@Value("${ui.uri}") String uiURI){
+        return new RedirectServerAuthenticationFailureHandler(uiURI+"?error");
     }
 }
