@@ -4,7 +4,6 @@ import bmi.ir.ssoclient.cryptography.SecretKeyReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.keygen.KeyGenerators;
@@ -26,7 +25,11 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.server.DelegatingServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.authentication.*;
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationEntryPoint;
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationFailureHandler;
+import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
+import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
+import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.cors.CorsConfiguration;
@@ -49,7 +52,7 @@ public class OAuth2Specialization {
                                                      ServerOAuth2AuthorizationRequestResolver reactiveOAuth2AuthorizationRequestResolver,
                                                      ServerAuthenticationSuccessHandler authenticationSuccessHandler,
                                                      ServerAuthenticationFailureHandler authenticationFailureHandler) {
-        http.csrf(Customizer.withDefaults())
+        http.csrf(csrfSpec -> csrfSpec.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse())) // default csrf repository is WebSessionServerCsrfTokenRepository
                 .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec.pathMatchers("/air/**", "/oauth2/**").permitAll().anyExchange().authenticated())
                 .exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec.authenticationEntryPoint(this.authenticationEntryPoint()))
                 .oauth2Login(oAuth2LoginSpec -> {
@@ -58,7 +61,7 @@ public class OAuth2Specialization {
                     oAuth2LoginSpec.authenticationSuccessHandler(authenticationSuccessHandler);
                     oAuth2LoginSpec.authenticationFailureHandler(authenticationFailureHandler);
                 });
-         return http.build();
+        return http.build();
     }
 //    @Bean
 //    /**
