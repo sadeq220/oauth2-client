@@ -32,7 +32,7 @@ public class OpenController {
      * To protect against CSRF exploit backend services
      * safe Methods(GET, HEAD, OPTIONS, and TRACE) Must be Read-only.
      *
-     *  Synchronizer Token Pattern(best practice) expects csrf-tokens be present in Header(or request param) of not safe requests.
+     *  Synchronizer Token Pattern (best practice) expects the CSRF-token to be present in the header (or request parameter) for non-safe requests.
      */
     @RequestMapping("/csrf-token")
     public Mono<Properties> getCsrfToken(ServerWebExchange exchange){
