@@ -1,22 +1,15 @@
 package bmi.ir.ssoclient.config;
 
 import bmi.ir.ssoclient.userInfo.UserInfoJWT;
-import bmi.ir.ssoclient.userInfo.model.UserInfoModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.codec.Hex;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Map;
 
 
 @Configuration
@@ -63,20 +56,7 @@ public class APIGatewayRouterConfig {
                         .uri("http://localhost"))
                 .build();
     }
-    /**
-     * One way to tie the microservice activities together is to use a special ID for each transaction called a “correlation ID”
-     * see https://www.bandwidth.com/blog/a-recipe-for-adding-correlation-ids-in-java-microservices/
-     */
-    /*
-    public Function<ServerRequest,ServerRequest> addCorrelationId(){
-        return serverRequest -> {
-            ServerRequest.Builder builder = ServerRequest.from(serverRequest);
-            byte[] randomBytes=new byte[8];
-            nonBlockingPRNG.nextBytes(randomBytes);
-            builder.header(CORRELATION_ID_HEADER, new String(Hex.encode(randomBytes)));
-            return builder.build();
-        };
-    }
+/*
     public Function<ServerRequest,ServerRequest> addJWT(){
         return serverRequest -> {
             ServerRequest.Builder builder = ServerRequest.from(serverRequest);
