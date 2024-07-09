@@ -36,16 +36,16 @@ public class TrackingGlobalFilter implements GlobalFilter, Ordered {
     }
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        byte[] randomBytes = new byte[8];
-        nonBlockingPRNG.nextBytes(randomBytes);
-        String correlationId = new String(Hex.encode(randomBytes));
         ServerHttpRequest request = exchange.getRequest();
         HttpHeaders requestHeaders = request.getHeaders();
         if (!requestHeaders.containsKey(CORRELATION_ID_HEADER)) {
+            byte[] randomBytes = new byte[8];
+            nonBlockingPRNG.nextBytes(randomBytes);
+            String correlationId = new String(Hex.encode(randomBytes));
             request.mutate().header(CORRELATION_ID_HEADER, correlationId).build();
         }
         return chain.filter(exchange)
-                .then(Mono.fromRunnable(()->exchange.getResponse().getHeaders().add(CORRELATION_ID_HEADER,requestHeaders.getFirst(CORRELATION_ID_HEADER))));
+                .then(Mono.fromRunnable(() -> exchange.getResponse().getHeaders().add(CORRELATION_ID_HEADER, requestHeaders.getFirst(CORRELATION_ID_HEADER))));
     }
 
     @Override

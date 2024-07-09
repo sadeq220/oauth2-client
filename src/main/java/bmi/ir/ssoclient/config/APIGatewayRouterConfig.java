@@ -8,26 +8,15 @@ import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-
 
 @Configuration
 public class APIGatewayRouterConfig {
-    private final SecureRandom nonBlockingPRNG;
     private final UserInfoJWT userInfoJWT;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    public static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
     public static final String REQUEST_TIMESTAMP_ATTRIBUTE = "request.forward.time";
 
-    public APIGatewayRouterConfig(UserInfoJWT userInfoJWT){
-        try {
-            this.nonBlockingPRNG = SecureRandom.getInstance("SHA1PRNG");
-            this.userInfoJWT = userInfoJWT;
-        } catch (NoSuchAlgorithmException e) {
-            logger.error(this.getClass()+" constructing error!",e);
-            throw new RuntimeException(this.getClass()+" constructing error!",e);
-        }
+    public APIGatewayRouterConfig(UserInfoJWT userInfoJWT) {
+        this.userInfoJWT = userInfoJWT;
     }
 //    @Bean
 //    /**
