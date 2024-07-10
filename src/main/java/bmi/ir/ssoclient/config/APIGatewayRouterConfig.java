@@ -11,13 +11,9 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class APIGatewayRouterConfig {
-    private final UserInfoJWT userInfoJWT;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     public static final String REQUEST_TIMESTAMP_ATTRIBUTE = "request.forward.time";
 
-    public APIGatewayRouterConfig(UserInfoJWT userInfoJWT) {
-        this.userInfoJWT = userInfoJWT;
-    }
 //    @Bean
 //    /**
 //     * add routing to spring cloud gateway with normal WebMvc.fn
@@ -46,20 +42,6 @@ public class APIGatewayRouterConfig {
                 .build();
     }
 /*
-    public Function<ServerRequest,ServerRequest> addJWT(){
-        return serverRequest -> {
-            ServerRequest.Builder builder = ServerRequest.from(serverRequest);
-            SecurityContext context = SecurityContextHolder.getContext();
-            Authentication authentication = context.getAuthentication();
-            if (!authentication.isAuthenticated()) {
-                throw new RuntimeException("user in not authenticated!");
-            }
-            UserInfoModel principal = (UserInfoModel) authentication.getPrincipal();
-            String jwt = userInfoJWT.createJWT(principal);
-            builder.header(HttpHeaders.AUTHORIZATION,"Bearer "+jwt);
-            return builder.build();
-        };
-    }
     public Function<ServerRequest,ServerRequest> addTimestamp(){
         return serverRequest -> {
             ServerRequest.Builder builder = ServerRequest.from(serverRequest);
