@@ -15,15 +15,15 @@ import reactor.core.publisher.Mono;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
+import static bmi.ir.ssoclient.config.gatewayfilters.RoutingConstants.CORRELATION_ID_HEADER;
+
 @Component
 /**
  * One way to tie the microservice activities together is to use a special ID for each transaction called a “correlation ID”
  * see https://www.bandwidth.com/blog/a-recipe-for-adding-correlation-ids-in-java-microservices/
  */
 public class TrackingGlobalFilter implements GlobalFilter, Ordered {
-
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    public static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
     private final SecureRandom nonBlockingPRNG;
 
     public TrackingGlobalFilter(){
