@@ -10,6 +10,9 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Component
+/**
+ * collect and log metrics(e.g. rtt)
+ */
 public class MetricsGlobalFilter implements GlobalFilter, Ordered {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
