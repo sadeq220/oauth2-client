@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class MVCConfig {
+public class GeneralConfig {
     @Bean
     public ObjectMapper jacksonMapper(){
         ObjectMapper objectMapper = new ObjectMapper();
