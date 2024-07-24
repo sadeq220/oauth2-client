@@ -20,6 +20,8 @@ import org.springframework.security.oauth2.client.web.DefaultOAuth2Authorization
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.server.DefaultServerOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
+import org.springframework.security.oauth2.client.web.server.WebSessionServerOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
@@ -29,6 +31,7 @@ import org.springframework.security.web.server.authentication.RedirectServerAuth
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationFailureHandler;
 import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
+import org.springframework.security.web.server.authentication.logout.ServerLogoutHandler;
 import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
 import org.springframework.util.MultiValueMap;
@@ -49,15 +52,19 @@ public class OAuth2Specialization {
      */
     @Bean
     public SecurityWebFilterChain securityConfigurer(ServerHttpSecurity http,
+                                                     ServerLogoutHandler serverLogoutHandler,
+                                                     ServerOAuth2AuthorizedClientRepository reactiveAuthorizedClientRepository,
                                                      ServerOAuth2AuthorizationRequestResolver reactiveOAuth2AuthorizationRequestResolver,
                                                      ServerAuthenticationSuccessHandler authenticationSuccessHandler,
                                                      ServerAuthenticationFailureHandler authenticationFailureHandler) {
         http.csrf(csrfSpec -> csrfSpec.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse())) // default csrf repository is WebSessionServerCsrfTokenRepository
                 .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec.pathMatchers("/air/**", "/oauth2/**").permitAll().anyExchange().authenticated())
+                .logout(logoutSpec -> {logoutSpec.logoutHandler(serverLogoutHandler);logoutSpec.logoutUrl("/logout");})
                 .exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec.authenticationEntryPoint(this.authenticationEntryPoint()))
                 .oauth2Login(oAuth2LoginSpec -> {
                     oAuth2LoginSpec.authorizationRequestResolver(reactiveOAuth2AuthorizationRequestResolver);
                     oAuth2LoginSpec.authenticationMatcher(new PathPatternParserServerWebExchangeMatcher("/login/oauth2/code/"));
+                    oAuth2LoginSpec.authorizedClientRepository(reactiveAuthorizedClientRepository);
                     oAuth2LoginSpec.authenticationSuccessHandler(authenticationSuccessHandler);
                     oAuth2LoginSpec.authenticationFailureHandler(authenticationFailureHandler);
                 });
@@ -148,6 +155,10 @@ public class OAuth2Specialization {
 
         DelegatingServerAuthenticationEntryPoint.DelegateEntry delegateEntry = new DelegatingServerAuthenticationEntryPoint.DelegateEntry(pathMatcher,redirectServerAuthenticationEntryPoint);
         return new DelegatingServerAuthenticationEntryPoint(delegateEntry);
+    }
+    @Bean
+    public ServerOAuth2AuthorizedClientRepository reactiveAuthorizedClientRepository(){
+        return new WebSessionServerOAuth2AuthorizedClientRepository();
     }
     @Bean
     public ServerOAuth2AuthorizationRequestResolver reactiveAuthorizationRequestResolver(ReactiveClientRegistrationRepository reactiveClientRegistrationRepository){
