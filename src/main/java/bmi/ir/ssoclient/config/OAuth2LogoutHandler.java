@@ -24,7 +24,7 @@ public class OAuth2LogoutHandler implements ServerLogoutHandler {
     public Mono<Void> logout(WebFilterExchange exchange, Authentication authentication) {
         OAuth2AuthenticationToken oauth2Authentication = (OAuth2AuthenticationToken) authentication;
         Mono<OAuth2AuthorizedClient> oAuth2AuthorizedClientMono = authorizedClientRepository.loadAuthorizedClient(oauth2Authentication.getAuthorizedClientRegistrationId(), authentication, exchange.getExchange());
-        Object details = oauth2Authentication.getDetails();//TODO customize details object
+        Object details = oauth2Authentication.getDetails();
         return Mono.empty();
     }
 }

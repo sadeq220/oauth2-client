@@ -201,10 +201,6 @@ public class OAuth2Specialization {
         return additionalParams;
     }
     @Bean
-    public ServerAuthenticationSuccessHandler authenticationSuccessHandler(@Value("${ui.uri}") String uiURI){
-        return new RedirectServerAuthenticationSuccessHandler(uiURI);
-    }
-    @Bean
     public ServerAuthenticationFailureHandler authenticationFailureHandler(@Value("${ui.uri}") String uiURI){
         return new RedirectServerAuthenticationFailureHandler(uiURI+"?error");
     }
