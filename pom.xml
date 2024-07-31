@@ -92,7 +92,7 @@
 				<version>3.4.1</version>
 				<configuration>
 					<to>
-						<image>api-gateway:${project.version}</image>
+						<image>reactive-api-gateway:${project.version}</image>
 						<tags>latest</tags>
 					</to>
 					<from>
