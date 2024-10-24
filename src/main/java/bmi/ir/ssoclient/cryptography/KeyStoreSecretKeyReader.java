@@ -25,7 +25,10 @@ public class KeyStoreSecretKeyReader implements SecretKeyReader{
                                    @Value("${keystore.name}") String keyStoreName) throws Exception{
         this.keyStorePassword = keystorePassword;
         this.keyStore = new ClassPathResource("keys/"+keyStoreName);
-        this.secretKeyCache = this.initCache();
+        this.secretKeyCache = this.tempInitCache();
+    }
+    private Map tempInitCache(){
+        return Map.of();
     }
     private Map initCache() throws Exception {
         try {

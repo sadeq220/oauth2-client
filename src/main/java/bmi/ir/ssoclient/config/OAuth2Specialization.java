@@ -51,49 +51,13 @@ public class OAuth2Specialization {
      * reactive securityFilterChain
      */
     @Bean
-    public SecurityWebFilterChain securityConfigurer(ServerHttpSecurity http,
-                                                     ServerLogoutHandler serverLogoutHandler,
-                                                     ServerOAuth2AuthorizedClientRepository reactiveAuthorizedClientRepository,
-                                                     ServerOAuth2AuthorizationRequestResolver reactiveOAuth2AuthorizationRequestResolver,
-                                                     ServerAuthenticationSuccessHandler authenticationSuccessHandler,
-                                                     ServerAuthenticationFailureHandler authenticationFailureHandler) {
-        http.csrf(csrfSpec -> csrfSpec.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse())) // default csrf repository is WebSessionServerCsrfTokenRepository
-                .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec.pathMatchers("/air/**", "/oauth2/**").permitAll().anyExchange().authenticated())
-                .logout(logoutSpec -> {logoutSpec.logoutHandler(serverLogoutHandler);logoutSpec.logoutUrl("/logout");})
-                .exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec.authenticationEntryPoint(this.authenticationEntryPoint()))
-                .oauth2Login(oAuth2LoginSpec -> {
-                    oAuth2LoginSpec.authorizationRequestResolver(reactiveOAuth2AuthorizationRequestResolver);
-                    oAuth2LoginSpec.authenticationMatcher(new PathPatternParserServerWebExchangeMatcher("/login/oauth2/code/"));
-                    oAuth2LoginSpec.authorizedClientRepository(reactiveAuthorizedClientRepository);
-                    oAuth2LoginSpec.authenticationSuccessHandler(authenticationSuccessHandler);
-                    oAuth2LoginSpec.authenticationFailureHandler(authenticationFailureHandler);
-                });
+    public SecurityWebFilterChain securityConfigurer(ServerHttpSecurity http) {
+        http.csrf(csrfSpec -> csrfSpec.disable())
+                //csrfSpec.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse())) // default csrf repository is WebSessionServerCsrfTokenRepository
+                .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec.anyExchange().permitAll())
+                .anonymous(anonymousSpec -> anonymousSpec.authorities("ROLE_ANONYMOUS"));
         return http.build();
     }
-//    @Bean
-//    /**
-//     * oauth2 filter chain
-//     */
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http,
-//                                                   OAuth2AuthorizationRequestResolver oAuth2AuthorizationRequestResolver,
-//                                                   AuthenticationSuccessHandler authenticationSuccessHandler,
-//                                                   AuthenticationFailureHandler authenticationFailureHandler,
-//                                                   @Qualifier("mvcCorsConfiguration") CorsConfigurationSource corsConfigurationSource
-//                                                   ) throws Exception {
-//        http.securityMatcher("/air/**","/oauth2/**","/protected/**")
-//                .csrf(Customizer.withDefaults())
-//                .authorizeHttpRequests((authorizeRequests)->authorizeRequests.requestMatchers("/air/**").permitAll().requestMatchers("/oauth2/**").permitAll().anyRequest().authenticated())
-//                .cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource))
-//               // .authorizeHttpRequests((authorizeRequests)->authorizeRequests.requestMatchers("/air/**").permitAll().anyRequest().authenticated()) // request matcher part of SecurityFilterChain
-//                //.oauth2Client((oauth2client)->{})
-//                .exceptionHandling(exceptionHandlingConfigurer -> {exceptionHandlingConfigurer.authenticationEntryPoint(this.authenticationEntryPoint());})
-//                .oauth2Login((oauth2login)->{oauth2login.authorizationEndpoint(authorizationEndpointConfig -> authorizationEndpointConfig.authorizationRequestResolver(oAuth2AuthorizationRequestResolver));
-//                                             //oauth2login.tokenEndpoint(tokenEndpointConfig -> tokenEndpointConfig.accessTokenResponseClient(this.tokenEndpointCustomizer()));
-//                                             oauth2login.successHandler(authenticationSuccessHandler);
-//                                             oauth2login.failureHandler(authenticationFailureHandler);
-//                                            });
-//        return http.build();
-//    }
 
     /**
      * relax cross origin policies for UI
@@ -109,16 +73,7 @@ public class OAuth2Specialization {
         source.registerCorsConfiguration("/**",corsConfiguration);
         return source;
     }
-    /**
-     * A repository for OAuth 2.0 / OpenID Connect 1.0 {@link ClientRegistration}(s).
-     */
-    @Bean
-    public ReactiveClientRegistrationRepository reactiveClientRegistrationRepository(SecretKeyReader secretKeyReader,BaamClientRegistrationProperties baamClientRegistrationProperties){
-        List<ClientRegistration> clientRegistrations = List.of(
-                this.googleClientRegistration(),
-                this.bamClientRegistration(secretKeyReader.getOAuth2ClientSecretKey(),baamClientRegistrationProperties));
-        return new InMemoryReactiveClientRegistrationRepository(clientRegistrations);
-    }
+
     private ClientRegistration googleClientRegistration(){
         return ClientRegistration
                 .withRegistrationId("google")
@@ -136,72 +91,9 @@ public class OAuth2Specialization {
                 .clientName("Google")
                 .build();
     }
-    private ClientRegistration bamClientRegistration(byte[] clientSecretKey,BaamClientRegistrationProperties clientProperties){
-        return ClientRegistration
-                .withRegistrationId("baam")
-                .clientId(clientProperties.getClientId())
-                .clientSecret(new String(clientSecretKey))
-                .authorizationUri(clientProperties.getAuthorizationUri())
-                .authorizationGrantType(clientProperties.getAuthorizationGrantType())
-                .scope(clientProperties.getScopes())
-                .redirectUri(clientProperties.getRedirectUri())
-                .clientAuthenticationMethod(clientProperties.getClientAuthenticationMethod())
-                .tokenUri(clientProperties.getTokenUri())
-                .build();
-    }
-    private DelegatingServerAuthenticationEntryPoint authenticationEntryPoint()  {
-        PathPatternParserServerWebExchangeMatcher pathMatcher = new PathPatternParserServerWebExchangeMatcher("/**");
-        RedirectServerAuthenticationEntryPoint redirectServerAuthenticationEntryPoint = new RedirectServerAuthenticationEntryPoint("/oauth2/authorization/baam");
-
-        DelegatingServerAuthenticationEntryPoint.DelegateEntry delegateEntry = new DelegatingServerAuthenticationEntryPoint.DelegateEntry(pathMatcher,redirectServerAuthenticationEntryPoint);
-        return new DelegatingServerAuthenticationEntryPoint(delegateEntry);
-    }
     @Bean
     public ServerOAuth2AuthorizedClientRepository reactiveAuthorizedClientRepository(){
         return new WebSessionServerOAuth2AuthorizedClientRepository();
     }
-    @Bean
-    public ServerOAuth2AuthorizationRequestResolver reactiveAuthorizationRequestResolver(ReactiveClientRegistrationRepository reactiveClientRegistrationRepository){
-        DefaultServerOAuth2AuthorizationRequestResolver reactiveOAuth2AuthorizationRequestResolver = new DefaultServerOAuth2AuthorizationRequestResolver(reactiveClientRegistrationRepository);
-        StringKeyGenerator keyGenerator = KeyGenerators.string();
-        reactiveOAuth2AuthorizationRequestResolver.setAuthorizationRequestCustomizer(builder -> {
-            builder.additionalParameters(this.authorizationUriAdditionalParams());
-            builder.state(keyGenerator.generateKey());// use HexEncodingStringKeyGenerator because baam does not accept base64 encoding
-        });
-        return reactiveOAuth2AuthorizationRequestResolver;
-    }
-   // @Bean
-    public OAuth2AuthorizationRequestResolver authorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository){
-        DefaultOAuth2AuthorizationRequestResolver defaultOAuth2AuthorizationRequestResolver = new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository, "/oauth2/authorization");
-        StringKeyGenerator keyGenerator = KeyGenerators.string();
-        defaultOAuth2AuthorizationRequestResolver.setAuthorizationRequestCustomizer(builder -> {
-            builder.additionalParameters(this.authorizationUriAdditionalParams());
-            builder.state(keyGenerator.generateKey()); // use HexEncodingStringKeyGenerator because baam does not accept base64 encoding
-        });
-        return defaultOAuth2AuthorizationRequestResolver;
-    }
-    private OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> tokenEndpointCustomizer(){
-        DefaultAuthorizationCodeTokenResponseClient tokenResponseClient = new DefaultAuthorizationCodeTokenResponseClient();
-        tokenResponseClient.setRequestEntityConverter(new OAuth2AuthorizationCodeGrantRequestEntityConverter(){
-            @Override
-            /**
-             * to customize access token request request-body parameters
-             */
-            protected MultiValueMap<String, String> createParameters(OAuth2AuthorizationCodeGrantRequest authorizationCodeGrantRequest) {
-                MultiValueMap<String, String> parameters = super.createParameters(authorizationCodeGrantRequest); // access token request-body parameters
-                parameters.set(OAuth2ParameterNames.REDIRECT_URI,"http://localhost:8080/login/oauth2/code"); // customize redirect_uri parameter for access token request
-                return parameters;
-            }
-        });
-        return tokenResponseClient;
-    }
-    private Map<String,Object> authorizationUriAdditionalParams(){
-        HashMap<String, Object> additionalParams = new HashMap<>();
-        additionalParams.put("sso",1);
-        return additionalParams;
-    }
-    @Bean
-    public ServerAuthenticationFailureHandler authenticationFailureHandler(@Value("${ui.uri}") String uiURI){
-        return new RedirectServerAuthenticationFailureHandler(uiURI+"?error");
-    }
+
 }

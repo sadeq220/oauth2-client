@@ -3,10 +3,13 @@ package bmi.ir.ssoclient.config;
 import bmi.ir.ssoclient.userInfo.UserInfoJWT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 
 @Configuration
@@ -35,10 +38,15 @@ public class APIGatewayRouterConfig {
 //    }
 
     @Bean
-    public RouteLocator customRouteLocator(RouteLocatorBuilder builder){
+    public RouteLocator customRouteLocator(RouteLocatorBuilder builder, List<GatewayFilter> gatewayFilters){
         return builder.routes()
-                .route(predicateSpec -> predicateSpec.path("/commons/**")
-                        .uri("http://localhost"))
+                .route("backend",predicateSpec -> predicateSpec.path("/bff/**")
+                        .filters(gatewayFilterSpec -> gatewayFilterSpec
+                                .rewritePath("/bff/?(?<segment>.*)","/${segment}")
+                                .filters(gatewayFilters))
+                        .uri("http://localhost:9090"))
+                .route(predicateSpec -> predicateSpec.path("/**")
+                        .uri("http://localhost:3000"))
                 .build();
     }
 /*

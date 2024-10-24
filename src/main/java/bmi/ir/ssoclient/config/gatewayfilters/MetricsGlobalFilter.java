@@ -2,6 +2,7 @@ package bmi.ir.ssoclient.config.gatewayfilters;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -13,7 +14,8 @@ import reactor.core.publisher.Mono;
 /**
  * collect and log metrics(e.g. rtt)
  */
-public class MetricsGlobalFilter implements GlobalFilter, Ordered {
+// TODO use spring-actuator with Prometheus and Grafana dashboard.
+public class MetricsGlobalFilter implements GatewayFilter, Ordered {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override

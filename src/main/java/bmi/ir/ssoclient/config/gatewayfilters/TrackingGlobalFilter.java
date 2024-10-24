@@ -2,6 +2,7 @@ package bmi.ir.ssoclient.config.gatewayfilters;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -22,7 +23,7 @@ import static bmi.ir.ssoclient.config.gatewayfilters.RoutingConstants.CORRELATIO
  * One way to tie the microservice activities together is to use a special ID for each transaction called a “correlation ID”
  * see https://www.bandwidth.com/blog/a-recipe-for-adding-correlation-ids-in-java-microservices/
  */
-public class TrackingGlobalFilter implements GlobalFilter, Ordered {
+public class TrackingGlobalFilter implements GatewayFilter, Ordered {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final SecureRandom nonBlockingPRNG;
 
